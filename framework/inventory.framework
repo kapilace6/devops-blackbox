@@ -1,20 +1,29 @@
 #!/usr/bin/env bash
 blackbox.framework.inventory() {
+  echo "#Start of blackbox.framework.inventory()"
   blackbox.framework.inventory.install() {
+    echo "#Start of blackbox.framework.install()"
     function blackbox.framework.inventory.install.directory() {
+      echo "#Start of blackbox.framework.inventory.install.directory()"
+      
       typeset destination=$1
       typeset owner=${2:-$(cut -d ":" -f 1 <<<"$BLACKBOX_USER")}
       typeset group=${3:-$(cut -d ":" -f 2 <<<"$BLACKBOX_USER"))}
       typeset mode=${4:-0775}
+      
+      echo "#blackbox.framework.inventory.install.directory() vars1: $destination $owner $group"
 
       {
         blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<""
       }
 
       install -o "$owner" -g "$group" -m "$mode" -d "$destination"
+      echo "#End of blackbox.framework.inventory.install.directory()"
     }
 
     function blackbox.framework.inventory.install.file() {
+      echo "#Start of blackbox.framework.inventory.install.file()"
+      
       # shellcheck disable=SC2155
       declare source=$(</dev/stdin)
 
@@ -22,6 +31,8 @@ blackbox.framework.inventory() {
       typeset owner=${2:-$(cut -d ":" -f 1 <<<"$BLACKBOX_USER")}
       typeset group=${3:-$(cut -d ":" -f 2 <<<"$BLACKBOX_USER")}
       typeset mode=${4:-0664}
+      
+      echo "#blackbox.framework.inventory.install.directory() vars1: $destination $owner $group"
 
       {
         blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<""
@@ -34,12 +45,17 @@ blackbox.framework.inventory() {
           install -o "$owner" -g "$group" -m "$mode" /dev/null "$destination"
         fi
       }
+      echo "#End of blackbox.framework.inventory.install.file()"
     }
   }; blackbox.framework.inventory.install
 
   function blackbox.framework.inventory.provision() {
+    echo "#Start of blackbox.framework.inventory.provision()"
+    
     typeset name=$1
     typeset -a with_deps=("${@:2}")
+    
+    echo "#blackbox.framework.inventory.provision() vars1: $name $with_deps"
 
     {
       blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<""
@@ -49,6 +65,8 @@ blackbox.framework.inventory() {
       blackbox.framework.exception.raise "inventory '%s' not found" "$name"
     fi
 
+    echo "#blackbox.framework.inventory.provision() bp1"
     blackbox.framework.import "blackbox.framework.inventory.${name}" "$name" "${with_deps[@]}"
+    echo "#End of blackbox.framework.inventory.provision()"
   }
 }
