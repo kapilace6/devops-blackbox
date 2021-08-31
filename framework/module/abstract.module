@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 blackbox.framework.module.abstract() {
+  echo "@@Start of blackbox.framework.module.abstract()"
+  
   typeset action_name=$1
   typeset -a action_args=("${@:2}")
+  
+  echo "@@blackbox.framework.module.abstract() args: $action_name $action_args"
 
   {
     blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<""
@@ -10,4 +14,6 @@ blackbox.framework.module.abstract() {
   blackbox.framework.import "blackbox.module.${BLACKBOX_MODULE_NAME}.${action_name}:action" "${action_args[@]}"
 
   : <<< blackbox.module.*
+  
+  echo "@@End of blackbox.framework.module.abstract()"
 }
