@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 blackbox.framework.module.abstract.setup.provision() {
+  echo "!!Start of blackbox.framework.module.abstract.setup.provision()"
+  
   # shellcheck disable=SC2034
   typeset -a args=("$@")
+  
+  echo "!!blackbox.framework.module.abstract.setup.provision() args: $args"
 
   {
     blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<"provision"
@@ -18,17 +22,25 @@ blackbox.framework.module.abstract.setup.provision() {
     return
   fi
 
+  echo "!!blackbox.framework.module.abstract.setup.provision() bp1"
+  
   blackbox.framework.inventory.provision docker-ce && {
     usermod -a -G docker "$BLACKBOX_USER_NAME"
     service docker start
   }
+  
+  echo "!!blackbox.framework.module.abstract.setup.provision() bp2"
 
   blackbox.framework.inventory.install.file /usr/local/bin/solve 0 0 0755 </blackbox/framework/module/abstract/setup/provision/rootfs/usr/local/bin/solve
 
   : <<< blackbox.module.*.setup.provision
+  
+  echo "!!blackbox.framework.module.abstract.setup.provision() bp3"
 
   if [ -n "$BLACKBOX_PROVISION_WITH_OPTS" ]; then
     (
+      echo "!!blackbox.framework.module.abstract.setup.provision() bp4"
+      
       printf "\n"
       printf "\033[0;36m** BLACKBOX_PROVISION_WITH_OPTS:\033[0m {...}\n"
       printf "\033[0;37m--\033[0m\n"
@@ -36,4 +48,6 @@ blackbox.framework.module.abstract.setup.provision() {
       printf "\033[0;37m--\033[0m\n"
     ) | if ( tput setaf &>/dev/null ); then cat; else sed "s/\x1b\[[0-9;]*m//g"; fi
   fi
+  
+  echo "!!End of blackbox.framework.module.abstract.setup.provision()"
 }
