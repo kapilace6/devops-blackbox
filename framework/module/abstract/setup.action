@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 blackbox.framework.module.abstract.setup() {
+  echo "!Start of blackbox.framework.module.abstract.setup()"
+  
   # shellcheck disable=SC2034
   typeset question_id=$1
   typeset -a step_args=("${@:2}")
+  
+  echo "!blackbox.framework.module.abstract.setup() args: $question_id $step_args"
 
   {
     blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<""
@@ -15,4 +19,6 @@ blackbox.framework.module.abstract.setup() {
   blackbox.framework.import "blackbox.module.${BLACKBOX_MODULE_NAME}.setup.provision:step" "${step_args[@]}"
 
   : <<< blackbox.module.*.setup
+  
+  echo "!End of blackbox.framework.module.abstract.setup()"
 }
