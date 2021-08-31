@@ -1,23 +1,33 @@
 #!/usr/bin/env bash
 blackbox.framework.inventory.k3s() {
+  echo "@Start of blackbox.framework.inventory.k3s()"
+  
   typeset package_name=$1
   typeset -a with_packages=("${@:2}")
+  
+  echo "@blackbox.framework.inventory.k3s() args: $package_name $with_packages"
 
   {
     blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<""
   }
 
   sed "s/\x1b\[[0-9;]*m//g" <(dpkg-query -W "$package_name" "${with_packages[@]}" 2>&1)
+  
+  echo "@blackbox.framework.inventory.k3s() bp1"
 
   if ( dpkg-query -L "$package_name" "${with_packages[@]}" &>/dev/null ); then
     false
 
     return
   fi
+  
+  echo "@blackbox.framework.inventory.k3s() bp2"
 
   if [ -z "$(find /var/lib/apt/lists -mindepth 1 -amin -60)" ]; then
     apt-get update
   fi
+  
+  echo "@blackbox.framework.inventory.k3s() bp3"
 
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends software-properties-common wget && {
     wget -S -P /usr/local/bin/ "https://github.com/rancher/k3s/releases/download/v1.18.9%2Bk3s1/k3s" && {
@@ -41,4 +51,5 @@ blackbox.framework.inventory.k3s() {
       DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "${with_packages[@]}"
     fi
   }
+  echo "@End of blackbox.framework.inventory.k3s()"
 }
