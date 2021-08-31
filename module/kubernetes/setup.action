@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 blackbox.module.kubernetes.setup() {
+  echo "!@Start of blackbox.module.kubernetes.setup()"
   : <<< blackbox.framework.module.abstract.setup:action
 }
