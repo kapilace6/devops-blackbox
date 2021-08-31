@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 blackbox.module.kubernetes.setup.provision() {
+  echo "@!Start of blackbox.module.kubernetes.setup.provision()"
   : <<< blackbox.framework.module.abstract.setup.provision:step
 
   blackbox.framework.inventory.provision k3s && {
@@ -9,4 +10,5 @@ blackbox.module.kubernetes.setup.provision() {
   }
 
   blackbox.framework.inventory.install.file script.sh </blackbox/module/kubernetes/setup/provision/rootfs/home/%/%/script.sh
+  echo "@!End of blackbox.module.kubernetes.setup.provision()"
 }
