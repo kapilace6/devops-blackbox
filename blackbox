@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 blackbox() {
+  echo "Start of blackbox()"
   export BLACKBOX_DIR=/blackbox
   # shellcheck disable=SC2155
   export BLACKBOX_SPAWN=$(awk -v master="$(</proc/sys/kernel/random/uuid)" -v user="$BLACKBOX_SPAWN" 'END { print ($0 == "systemd") ? master : user }' <(ps -p 1 -o comm=))
@@ -40,14 +41,22 @@ blackbox() {
   # shellcheck disable=SC2034
   typeset -gx BLACKBOX_QUESTION_ID=$3
 
+  echo "End of blackbox() defintions"
   blackbox.framework() {
+    echo "Start of blackbox.framework()"
     function blackbox.framework.import() {
+      echo "Start of blackbox.framework.import()"
+      
       typeset namespace=$1
       typeset -a args=("${@:2}")
+      
+      echo "blackbox.framework.import() arguments : $namespace $args"
 
       local destination_namespace_name=${namespace%:*}
       # shellcheck disable=SC2155
       local destination_namespace_extension=$(sed -n "s/.*://p" <<<"$namespace")
+      
+      echo "blackbox.framework.import() vars1 : $destination_namespace_name $destination_namespace_extension"
 
       if [ -z "$destination_namespace_extension" ]; then
         destination_namespace_extension=$(rev <(cut -d "." -f 2 <(rev <<<"$namespace")))
@@ -55,6 +64,7 @@ blackbox() {
 
       # shellcheck disable=SC2155
       local destination_definition=$(declare -f "$destination_namespace_name")
+      echo "blackbox.framework.import() vars2 : $destination_definition"
 
       if [ -n "$destination_definition" ]; then
         return
@@ -62,7 +72,8 @@ blackbox() {
 
       # shellcheck disable=SC2155
       local destination_definition_path=$(printf "%s/%s.%s" "$BLACKBOX_DIR" "$(sed "s/\./\//g" <(cut -d "." -f 2- <<<"$destination_namespace_name"))" "$destination_namespace_extension")
-
+      echo "blackbox.framework.import() vars3 : $destination_definition_path"
+      
       if [ ! -e "$destination_definition_path" ]; then
         blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<""
 
@@ -80,7 +91,8 @@ blackbox() {
 
       # shellcheck disable=SC2155
       local destination_definition_source_placeholder=$(sed -n '/^[[:space:]]*:[[:space:]]<<<[[:space:]]blackbox\.[[:lower:][:digit:].:]\+;\{0,1\}$/p' <<<"$destination_definition")
-
+      echo "blackbox.framework.import() vars4 : $destination_definition_source_placeholder"
+      
       if [ -z "$destination_definition_source_placeholder" ]; then
         blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<""
 
@@ -97,6 +109,7 @@ blackbox() {
       local source_namespace_name=${source_namespace%:*}
       # shellcheck disable=SC2155
       local source_namespace_extension=$(sed -n "s/.*://p" <<<"$source_namespace")
+      echo "blackbox.framework.import() vars5 : $source_namespace_extension"
 
       if [ -z "$source_namespace_extension" ]; then
         source_namespace_extension=$(rev <(cut -d "." -f 2 <(rev <<<"$source_namespace")))
@@ -104,7 +117,8 @@ blackbox() {
 
       # shellcheck disable=SC2155
       local source_definition_path=$(printf "%s/%s.%s" "$BLACKBOX_DIR" "$(sed "s/\./\//g" <(cut -d "." -f 2- <<<"$source_namespace_name"))" "$source_namespace_extension")
-
+      echo "blackbox.framework.import() vars6 : $source_namespace_extension"
+      
       if [ ! -e "$source_definition_path" ]; then
         blackbox.framework.trace "${FUNCNAME[0]}" "$*" <<<""
 
@@ -124,7 +138,8 @@ blackbox() {
       local source_definition_destination_placeholder=$(sed -n "/[[:space:]]*:[[:space:]]<<<[[:space:]]blackbox\.[[:lower:][:digit:].*:]\+;\{0,1\}/p" <<<"$source_definition")
       # shellcheck disable=SC2155
       local source_definition_destination_namespace=$(sed -n "s/[[:space:]]*:[[:space:]]<<<[[:space:]]\(blackbox\.[[:lower:][:digit:].*:]\+\);\{0,1\}/\1/p" <<<"$source_definition_destination_placeholder")
-
+      echo "blackbox.framework.import() vars7 : $source_definition_destination_namespace"
+      
       if ( ! grep -q "$(printf '^%s$' "$source_definition_destination_namespace")" <<<"$destination_namespace_name" ); then
         blackbox.framework.trace "${FUNCNAME[0]}" "$*" "$(printf '<%s> %s' "$source_definition_destination_namespace" "$destination_namespace_name")" <<<""
 
@@ -140,19 +155,25 @@ blackbox() {
       source_definition=$(sed '1,2d; $d' <<<"$source_definition")
       # shellcheck disable=SC2016
       destination_definition=$(sed "$(printf '1,2d; $d; /%s/d' "$destination_definition_source_placeholder")" <<<"$destination_definition")
+      echo "blackbox.framework.import() vars8 : $destination_definition"
 
       blackbox.framework.trace "${FUNCNAME[0]}" "$*" "$(printf '&%s %s' "$source_namespace_name" "$destination_namespace_name")" <<<""
 
       eval "$(printf '%s() { %s }; %s' "$destination_namespace_name" "${source_definition/${source_definition_destination_placeholder}/${destination_definition}}" "$destination_namespace_name")" "${args[@]}"
+      echo "End of blackbox.framework.import()"
     }
 
     function blackbox.framework.trace() {
+      echo "Start of blackbox.framework.trace()"
+      
       # shellcheck disable=SC2155
       declare header=$(</dev/stdin)
 
       typeset entrypoint=$1
       typeset args=("$2")
       typeset opts=("$3")
+      
+      echo "blackbox.framework.trace() vars1: $entrypoint $args $opts"
 
       if [ -n "${args[*]}" ]; then
         args=("$(sed ':a;N;$!ba;s/\n/\t/g; s/[[:space:]]\+/ /g' <<<"${args[*]/#/ < }")")
@@ -181,12 +202,18 @@ blackbox() {
           printf "\033[0;37m// %s%s%s {...}\033[0m\n" "${entrypoint[0]}" "${args[*]}" "${opts[*]}"
         fi
       ) | if ( tput setaf &>/dev/null ); then cat; else sed "s/\x1b\[[0-9;]*m//g"; fi | if [[ "$BLACKBOX_FLAG__DEBUG_MODE" == "yes" ]]; then cat >&2; else cat; fi
+    
+      echo "End of blackbox.framework.trace()"
     }
   }; blackbox.framework
 
   function blackbox.__init() {
+    echo "Start of blackbox._init()"
+    
     typeset module_name=$1
     typeset -a module_args=("${@:2}")
+    
+    echo "blackbox._init() vars1: $module_name $module_args"
 
     {
       shopt -os allexport
@@ -207,6 +234,8 @@ blackbox() {
       } || printf "error: *** blackbox '%s' is not available\n" "$BLACKBOX_VERSION"
     fi
 
+    echo "blackbox._init() bp2"
+    
     blackbox.framework.import blackbox.framework.exception
     blackbox.framework.import blackbox.framework.flag
     blackbox.framework.import blackbox.framework.inventory
@@ -215,6 +244,8 @@ blackbox() {
     if [ -z "$module_name" ]; then
       return;
     fi
+    
+    echo "blackbox._init() bp3"
 
     blackbox.framework.inventory.install.directory "$BLACKBOX_USER_QUESTION_DIR" && {
       pushd "$BLACKBOX_USER_QUESTION_DIR" && {
@@ -223,5 +254,7 @@ blackbox() {
         }
       }
     }
+    
+    echo "End of blackbox._init()"
   } && blackbox.__init "$@"
 }; blackbox "$@"
